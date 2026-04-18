@@ -1,0 +1,177 @@
+"""Anthropic tool-use orchestrator with Velor in the path.
+
+Install with:  pip install "velor-sdk[anthropic]"
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+from velor_sdk.client import VelorClient
+from velor_sdk.run_tool import run_tool
+
+if TYPE_CHECKING:
+    from anthropic import Anthropic
+
+
+@dataclass
+class VelorTool:
+    name: str
+    description: str
+    input_schema: dict[str, Any]
+    handler: Callable[[dict[str, Any]], Any]
+
+
+@dataclass
+class RunAnthropicAgentResult:
+    execution_id: str
+    messages: list[dict[str, Any]]
+    stop_reason: str | None
+    final_text: str
+    turns: int
+
+
+def run_anthropic_agent(
+    *,
+    client: "Anthropic",
+    velor: VelorClient,
+    agent_id: str,
+    model: str,
+    messages: list[dict[str, Any]],
+    tools: list[VelorTool],
+    max_turns: int = 8,
+    max_tokens: int = 1024,
+    system: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> RunAnthropicAgentResult:
+    """Run a full Anthropic tool-use loop with Velor evaluating every call.
+
+    Starts an execution, ciclea ``messages.create`` and the tool-use round-trip
+    until the model stops asking for tools (or ``max_turns`` is hit), and
+    records every decision and outcome on the execution timeline.
+    """
+    execution = velor.start_execution(
+        {
+            "agent_id": agent_id,
+            "metadata": {**(metadata or {}), "model": model, "tool_count": len(tools)},
+        }
+    )
+
+    tool_defs = [
+        {"name": t.name, "description": t.description, "input_schema": t.input_schema}
+        for t in tools
+    ]
+    tool_index = {t.name: t for t in tools}
+    working_messages = list(messages)
+
+    stop_reason: str | None = None
+    turns = 0
+    final_text = ""
+
+    for turn in range(1, max_turns + 1):
+        turns = turn
+
+        kwargs: dict[str, Any] = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "tools": tool_defs,
+            "messages": working_messages,
+        }
+        if system is not None:
+            kwargs["system"] = system
+
+        response = client.messages.create(**kwargs)
+        stop_reason = response.stop_reason
+        text = "".join(
+            block.text for block in response.content if getattr(block, "type", None) == "text"
+        )
+
+        velor.log_event(
+            {
+                "execution_id": execution["id"],
+                "type": "decision",
+                "payload": {
+                    "turn": turn,
+                    "stop_reason": stop_reason,
+                    "text": text or None,
+                },
+                "metadata": metadata or {},
+            }
+        )
+
+        if response.stop_reason != "tool_use":
+            final_text = text
+            break
+
+        working_messages.append({"role": "assistant", "content": response.content})
+
+        tool_results: list[dict[str, Any]] = []
+
+        for block in response.content:
+            if getattr(block, "type", None) != "tool_use":
+                continue
+
+            tool = tool_index.get(block.name)
+            if tool is None:
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "is_error": True,
+                        "content": f'Unknown tool "{block.name}"',
+                    }
+                )
+                continue
+
+            result = run_tool(
+                velor,
+                execution_id=execution["id"],
+                tool=block.name,
+                input=dict(block.input or {}),
+                execute=tool.handler,
+                metadata={**(metadata or {}), "tool_use_id": block.id},
+            )
+
+            if result["status"] == "denied":
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "is_error": True,
+                        "content": f"Blocked by Velor policy: {result['reason']}",
+                    }
+                )
+            elif result["status"] == "error":
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "is_error": True,
+                        "content": str(result["error"]),
+                    }
+                )
+            else:
+                output = result["output"]
+                content = output if isinstance(output, str) else json.dumps(output)
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": content,
+                    }
+                )
+
+        working_messages.append({"role": "user", "content": tool_results})
+
+    velor.flush()
+
+    return RunAnthropicAgentResult(
+        execution_id=execution["id"],
+        messages=working_messages,
+        stop_reason=stop_reason,
+        final_text=final_text,
+        turns=turns,
+    )

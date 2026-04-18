@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "velor-sdk"
+version = "0.0.1"
+description = "Velor SDK for Python — control layer for AI agents"
+readme = { content-type = "text/markdown", text = "See https://velor.dev for docs." }
+requires-python = ">=3.10"
+license = { text = "UNLICENSED" }
+dependencies = [
+  "httpx>=0.27,<1.0",
+]
+
+[project.optional-dependencies]
+anthropic = [
+  "anthropic>=0.40,<1.0",
+]
+dev = [
+  "anthropic>=0.40,<1.0",
+  "pytest>=8.0",
+  "pytest-asyncio>=0.24",
+  "respx>=0.22",
+  "ruff>=0.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["velor_sdk"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
