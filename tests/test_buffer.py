@@ -1,7 +1,7 @@
 import threading
 import time
 
-from velor_sdk.buffer import EventBuffer
+from argus_sdk.buffer import EventBuffer
 
 
 def test_flushes_when_batch_size_hit():

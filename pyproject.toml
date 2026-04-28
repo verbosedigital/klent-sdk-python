@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "velor-sdk"
+name = "argus-sdk"
 version = "0.0.1"
-description = "Velor SDK for Python — control layer for AI agents"
-readme = { content-type = "text/markdown", text = "See https://velor.dev for docs." }
+description = "Argus SDK for Python — control layer for AI agents"
+readme = { content-type = "text/markdown", text = "See https://argus.dev for docs." }
 requires-python = ">=3.10"
 license = { text = "UNLICENSED" }
 dependencies = [
@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["velor_sdk"]
+packages = ["argus_sdk"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -2,15 +2,15 @@ import httpx
 import pytest
 import respx
 
-from velor_sdk import VelorClient
+from argus_sdk import ArgusClient
 
 
 BASE_URL = "http://api.test.local/v1"
 
 
 def make_client(**kwargs):
-    return VelorClient(
-        api_key="vk_test_abc",
+    return ArgusClient(
+        api_key="ak_test_abc",
         base_url=BASE_URL,
         max_retries=0,
         flush_interval_seconds=0.05,
@@ -41,7 +41,7 @@ def test_start_execution_sends_bearer_and_parses_response():
     assert execution["id"] == "exec_1"
     assert route.call_count == 1
     req = route.calls[0].request
-    assert req.headers["authorization"] == "Bearer vk_test_abc"
+    assert req.headers["authorization"] == "Bearer ak_test_abc"
 
 
 @respx.mock
@@ -117,7 +117,7 @@ def test_retries_on_5xx():
 
     respx.post(f"{BASE_URL}/executions").mock(side_effect=handler)
 
-    client = VelorClient(
+    client = ArgusClient(
         api_key="k",
         base_url=BASE_URL,
         max_retries=3,
@@ -130,4 +130,4 @@ def test_retries_on_5xx():
 
 def test_requires_api_key():
     with pytest.raises(ValueError):
-        VelorClient(api_key="")
+        ArgusClient(api_key="")

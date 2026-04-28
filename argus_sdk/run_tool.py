@@ -1,11 +1,11 @@
-"""Generic helper that wraps one tool invocation with the full Velor decision loop."""
+"""Generic helper that wraps one tool invocation with the full Argus decision loop."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any, TypedDict
 
-from velor_sdk.client import VelorClient
+from argus_sdk.client import ArgusClient
 
 
 class AllowedResult(TypedDict):
@@ -26,7 +26,7 @@ class ErrorResult(TypedDict):
 
 
 def run_tool(
-    client: VelorClient,
+    client: ArgusClient,
     *,
     execution_id: str,
     tool: str,
@@ -34,7 +34,7 @@ def run_tool(
     execute: Callable[[dict[str, Any]], Any],
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Run one tool call through Velor.
+    """Run one tool call through Argus.
 
     Performs, in order:
       action_requested → evaluate → (modify | allow | deny) → action_executed | action_blocked | error

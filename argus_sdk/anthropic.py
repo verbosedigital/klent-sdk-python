@@ -1,6 +1,6 @@
-"""Anthropic tool-use orchestrator with Velor in the path.
+"""Anthropic tool-use orchestrator with Argus in the path.
 
-Install with:  pip install "velor-sdk[anthropic]"
+Install with:  pip install "argus-sdk[anthropic]"
 """
 
 from __future__ import annotations
@@ -10,15 +10,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from velor_sdk.client import VelorClient
-from velor_sdk.run_tool import run_tool
+from argus_sdk.client import ArgusClient
+from argus_sdk.run_tool import run_tool
 
 if TYPE_CHECKING:
     from anthropic import Anthropic
 
 
 @dataclass
-class VelorTool:
+class ArgusTool:
     name: str
     description: str
     input_schema: dict[str, Any]
@@ -37,23 +37,23 @@ class RunAnthropicAgentResult:
 def run_anthropic_agent(
     *,
     client: "Anthropic",
-    velor: VelorClient,
+    argus: ArgusClient,
     agent_id: str,
     model: str,
     messages: list[dict[str, Any]],
-    tools: list[VelorTool],
+    tools: list[ArgusTool],
     max_turns: int = 8,
     max_tokens: int = 1024,
     system: str | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> RunAnthropicAgentResult:
-    """Run a full Anthropic tool-use loop with Velor evaluating every call.
+    """Run a full Anthropic tool-use loop with Argus evaluating every call.
 
     Starts an execution, ciclea ``messages.create`` and the tool-use round-trip
     until the model stops asking for tools (or ``max_turns`` is hit), and
     records every decision and outcome on the execution timeline.
     """
-    execution = velor.start_execution(
+    execution = argus.start_execution(
         {
             "agent_id": agent_id,
             "metadata": {**(metadata or {}), "model": model, "tool_count": len(tools)},
@@ -89,7 +89,7 @@ def run_anthropic_agent(
             block.text for block in response.content if getattr(block, "type", None) == "text"
         )
 
-        velor.log_event(
+        argus.log_event(
             {
                 "execution_id": execution["id"],
                 "type": "decision",
@@ -127,7 +127,7 @@ def run_anthropic_agent(
                 continue
 
             result = run_tool(
-                velor,
+                argus,
                 execution_id=execution["id"],
                 tool=block.name,
                 input=dict(block.input or {}),
@@ -141,7 +141,7 @@ def run_anthropic_agent(
                         "type": "tool_result",
                         "tool_use_id": block.id,
                         "is_error": True,
-                        "content": f"Blocked by Velor policy: {result['reason']}",
+                        "content": f"Blocked by Argus policy: {result['reason']}",
                     }
                 )
             elif result["status"] == "error":
@@ -166,7 +166,7 @@ def run_anthropic_agent(
 
         working_messages.append({"role": "user", "content": tool_results})
 
-    velor.flush()
+    argus.flush()
 
     return RunAnthropicAgentResult(
         execution_id=execution["id"],

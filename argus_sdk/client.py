@@ -1,4 +1,4 @@
-"""Velor Python SDK client."""
+"""Argus Python SDK client."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from typing import Any, cast
 
 import httpx
 
-from velor_sdk.buffer import EventBuffer
-from velor_sdk.types import (
+from argus_sdk.buffer import EventBuffer
+from argus_sdk.types import (
     CreateExecutionRequest,
     EvaluateActionRequest,
     EvaluateActionResponse,
@@ -18,11 +18,11 @@ from velor_sdk.types import (
     LogEventRequest,
 )
 
-DEFAULT_BASE_URL = "https://api.velor.dev/v1"
+DEFAULT_BASE_URL = "https://api.argus.dev/v1"
 
 
-class VelorClient:
-    """Synchronous Velor client.
+class ArgusClient:
+    """Synchronous Argus client.
 
     The ``evaluate_action`` and ``start_execution`` methods are blocking.
     ``log_event`` is non-blocking — events are buffered and flushed in the
@@ -41,7 +41,7 @@ class VelorClient:
         http_client: httpx.Client | None = None,
     ) -> None:
         if not api_key:
-            raise ValueError("VelorClient: api_key is required")
+            raise ValueError("ArgusClient: api_key is required")
 
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
@@ -75,7 +75,7 @@ class VelorClient:
             if self._owned_client:
                 self._http.close()
 
-    def __enter__(self) -> VelorClient:
+    def __enter__(self) -> ArgusClient:
         return self
 
     def __exit__(self, *_exc: object) -> None:
@@ -138,7 +138,7 @@ class VelorClient:
 
 class _HttpError(RuntimeError):
     def __init__(self, method: str, path: str, status: int, body: str) -> None:
-        super().__init__(f"Velor {method} {path} failed: {status} {body}")
+        super().__init__(f"Argus {method} {path} failed: {status} {body}")
         self.status = status
 
 

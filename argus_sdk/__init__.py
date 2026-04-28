@@ -1,8 +1,8 @@
-"""Velor Python SDK."""
+"""Argus Python SDK."""
 
-from velor_sdk.client import VelorClient
-from velor_sdk.run_tool import run_tool
-from velor_sdk.types import (
+from argus_sdk.client import ArgusClient
+from argus_sdk.run_tool import run_tool
+from argus_sdk.types import (
     CreateExecutionRequest,
     EvaluateActionRequest,
     EvaluateActionResponse,
@@ -14,7 +14,7 @@ from velor_sdk.types import (
 )
 
 __all__ = [
-    "VelorClient",
+    "ArgusClient",
     "run_tool",
     "CreateExecutionRequest",
     "EvaluateActionRequest",
