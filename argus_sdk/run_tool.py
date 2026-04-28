@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from typing import Any, TypedDict
 
@@ -75,24 +76,29 @@ def run_tool(
     if decision["decision"] == "modify" and decision.get("modifications"):
         effective_input = _apply_modifications(input, decision["modifications"])
 
+    started = time.monotonic()
     try:
         output = execute(effective_input)
     except BaseException as exc:
+        duration_ms = int((time.monotonic() - started) * 1000)
         client.log_event(
             {
                 "execution_id": execution_id,
                 "type": "error",
                 "payload": {"tool": tool, "message": str(exc)},
+                "duration_ms": duration_ms,
                 "metadata": metadata or {},
             }
         )
         return {"status": "error", "error": exc}
 
+    duration_ms = int((time.monotonic() - started) * 1000)
     client.log_event(
         {
             "execution_id": execution_id,
             "type": "action_executed",
             "payload": {"tool": tool, "output": output},
+            "duration_ms": duration_ms,
             "metadata": metadata or {},
         }
     )

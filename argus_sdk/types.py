@@ -35,6 +35,7 @@ class LogEventRequest(TypedDict, total=False):
     type: EventType
     payload: dict[str, Any]
     metadata: NotRequired[dict[str, Any]]
+    duration_ms: NotRequired[int]
     occurred_at: NotRequired[str]
 
 

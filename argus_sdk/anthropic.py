@@ -6,6 +6,7 @@ Install with:  pip install "argus-sdk[anthropic]"
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -83,7 +84,10 @@ def run_anthropic_agent(
         if system is not None:
             kwargs["system"] = system
 
+        llm_started = time.monotonic()
         response = client.messages.create(**kwargs)
+        llm_duration_ms = int((time.monotonic() - llm_started) * 1000)
+
         stop_reason = response.stop_reason
         text = "".join(
             block.text for block in response.content if getattr(block, "type", None) == "text"
@@ -98,6 +102,7 @@ def run_anthropic_agent(
                     "stop_reason": stop_reason,
                     "text": text or None,
                 },
+                "duration_ms": llm_duration_ms,
                 "metadata": metadata or {},
             }
         )
