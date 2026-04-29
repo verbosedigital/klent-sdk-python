@@ -16,6 +16,7 @@ from argus_sdk.types import (
     EvaluateActionResponse,
     Execution,
     LogEventRequest,
+    PendingAction,
 )
 
 DEFAULT_BASE_URL = "https://api.argus.dev/v1"
@@ -64,6 +65,37 @@ class ArgusClient:
 
     def evaluate_action(self, body: EvaluateActionRequest) -> EvaluateActionResponse:
         return cast(EvaluateActionResponse, self._request("POST", "/actions/evaluate", body))
+
+    def get_pending_action(self, pending_action_id: str, *, wait_ms: int = 0) -> PendingAction:
+        """Read a pending action.
+
+        ``wait_ms`` enables server-side long-polling: the call holds the HTTP
+        connection until the row is resolved or the budget elapses (max 30s
+        per call). Pass 0 (default) for a single-shot read; the retry/backoff
+        loop is bypassed when ``wait_ms > 0`` so the wait is the budget.
+        """
+        if wait_ms < 0:
+            raise ValueError("wait_ms must be >= 0")
+        if wait_ms == 0:
+            return cast(PendingAction, self._request("GET", f"/pending_actions/{pending_action_id}"))
+        return cast(
+            PendingAction,
+            self._request_no_retry("GET", f"/pending_actions/{pending_action_id}?wait_ms={wait_ms}"),
+        )
+
+    def _request_no_retry(self, method: str, path: str, body: object | None = None) -> Any:
+        """Single-attempt request, no retry/backoff. Used for long-poll reads."""
+        url = f"{self._base_url}{path}"
+        headers = {
+            "authorization": f"Bearer {self._api_key}",
+            "content-type": "application/json",
+        }
+        response = self._http.request(method, url, json=body, headers=headers)
+        if 200 <= response.status_code < 300:
+            if response.status_code in (202, 204) or not response.content:
+                return None
+            return response.json()
+        raise _HttpError(method, path, response.status_code, response.text)
 
     def flush(self) -> None:
         self._buffer.flush()
