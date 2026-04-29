@@ -149,6 +149,23 @@ def run_anthropic_agent(
                         "content": f"Blocked by Argus policy: {result['reason']}",
                     }
                 )
+            elif result["status"] == "pending":
+                # Surface pending state to the model so the agent can decide
+                # what to do (retry later, narrate to the user, fall back).
+                # Callers wanting synchronous waiting should call run_tool
+                # directly with approval_wait set.
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "is_error": True,
+                        "content": (
+                            f"Awaiting human approval "
+                            f"(pending_action_id={result['pending_action_id']}). "
+                            f"{result['reason']}"
+                        ),
+                    }
+                )
             elif result["status"] == "error":
                 tool_results.append(
                     {

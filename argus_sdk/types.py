@@ -9,10 +9,15 @@ EventType = Literal[
     "action_requested",
     "action_executed",
     "action_blocked",
+    "action_steered",
+    "pending_approval",
+    "approval_resolved",
     "error",
 ]
 
-PolicyEffect = Literal["allow", "deny", "modify"]
+PolicyEffect = Literal["allow", "deny", "modify", "approve", "steer"]
+
+PendingActionStatus = Literal["pending", "approved", "rejected", "expired"]
 
 
 class CreateExecutionRequest(TypedDict, total=False):
@@ -62,8 +67,38 @@ class PolicyModification(TypedDict):
     value: Any
 
 
+class PolicyRedirect(TypedDict):
+    """For `effect: 'steer'` policies — the substitute tool to run instead."""
+
+    tool: str
+    input: dict[str, Any]
+
+
 class EvaluateActionResponse(TypedDict):
     decision: PolicyEffect
     matched_policy_id: str | None
     modifications: list[PolicyModification] | None
+    redirect_to: PolicyRedirect | None
+    pending_action_id: str | None
     reason: str | None
+
+
+class PendingAction(TypedDict):
+    """An action parked waiting for human approval."""
+
+    id: str
+    project_id: str
+    execution_id: str
+    event_id: str | None
+    tool: str
+    input: dict[str, Any]
+    metadata: dict[str, Any]
+    status: PendingActionStatus
+    matched_policy_id: str | None
+    reason: str | None
+    modifications: list[PolicyModification] | None
+    requested_at: str
+    expires_at: str | None
+    resolved_at: str | None
+    resolved_by_user_id: str | None
+    resolution_note: str | None
