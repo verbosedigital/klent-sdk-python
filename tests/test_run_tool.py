@@ -21,7 +21,7 @@ def _decision(**overrides: Any) -> dict[str, Any]:
     return base
 
 
-class FakeVelor:
+class FakeKlent:
     """Stands in for KlentClient. Records all calls, returns a scripted decision."""
 
     def __init__(
@@ -53,7 +53,7 @@ class FakeVelor:
 
 
 def test_allow_executes_and_logs_action_executed():
-    klent = FakeVelor(_decision())
+    klent = FakeKlent(_decision())
     called_with = {}
 
     def execute(inp):
@@ -77,7 +77,7 @@ def test_allow_executes_and_logs_action_executed():
 
 
 def test_deny_short_circuits_and_does_not_execute():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="deny",
             matched_policy_id="pol_1",
@@ -109,7 +109,7 @@ def test_deny_short_circuits_and_does_not_execute():
 
 
 def test_modify_applies_modifications_before_execute():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="modify",
             matched_policy_id="pol_m",
@@ -142,7 +142,7 @@ def test_modify_applies_modifications_before_execute():
 
 
 def test_modify_does_not_mutate_caller_input():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="modify",
             matched_policy_id="pol_m",
@@ -163,7 +163,7 @@ def test_modify_does_not_mutate_caller_input():
 
 
 def test_error_is_captured_and_logged():
-    klent = FakeVelor(_decision())
+    klent = FakeKlent(_decision())
 
     def execute(_inp):
         raise RuntimeError("boom")
@@ -185,7 +185,7 @@ def test_error_is_captured_and_logged():
 
 
 def test_metadata_is_forwarded_to_every_event():
-    klent = FakeVelor(_decision())
+    klent = FakeKlent(_decision())
 
     run_tool(
         klent,  # type: ignore[arg-type]
@@ -206,7 +206,7 @@ def test_metadata_is_forwarded_to_every_event():
 
 
 def test_steer_runs_executeSteered_with_redirect_target():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="steer",
             matched_policy_id="pol_steer",
@@ -243,7 +243,7 @@ def test_steer_runs_executeSteered_with_redirect_target():
 
 
 def test_steer_falls_back_to_execute_with_steered_input():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="steer",
             matched_policy_id="pol_steer",
@@ -269,7 +269,7 @@ def test_steer_falls_back_to_execute_with_steered_input():
 
 
 def test_steer_without_redirect_is_an_error():
-    klent = FakeVelor(_decision(decision="steer", redirect_to=None))
+    klent = FakeKlent(_decision(decision="steer", redirect_to=None))
     result = run_tool(
         klent,  # type: ignore[arg-type]
         execution_id="exec_1",
@@ -307,7 +307,7 @@ def _pending_row(**overrides: Any) -> dict[str, Any]:
 
 
 def test_approve_returns_pending_when_no_wait_is_provided():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -338,7 +338,7 @@ def test_approve_returns_pending_when_no_wait_is_provided():
 
 
 def test_approve_with_wait_runs_tool_when_approved():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -361,7 +361,7 @@ def test_approve_with_wait_runs_tool_when_approved():
 
 
 def test_approve_with_wait_applies_resolver_modifications():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -393,7 +393,7 @@ def test_approve_with_wait_applies_resolver_modifications():
 
 
 def test_approve_with_wait_returns_denied_when_rejected():
-    klent = FakeVelor(
+    klent = FakeKlent(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
