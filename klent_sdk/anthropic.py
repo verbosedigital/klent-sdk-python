@@ -1,6 +1,6 @@
-"""Anthropic tool-use orchestrator with Argus in the path.
+"""Anthropic tool-use orchestrator with Klent in the path.
 
-Install with:  pip install "argus-sdk[anthropic]"
+Install with:  pip install "klent-sdk[anthropic]"
 """
 
 from __future__ import annotations
@@ -11,15 +11,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from argus_sdk.client import ArgusClient
-from argus_sdk.run_tool import run_tool
+from klent_sdk.client import KlentClient
+from klent_sdk.run_tool import run_tool
 
 if TYPE_CHECKING:
     from anthropic import Anthropic
 
 
 @dataclass
-class ArgusTool:
+class KlentTool:
     name: str
     description: str
     input_schema: dict[str, Any]
@@ -38,23 +38,23 @@ class RunAnthropicAgentResult:
 def run_anthropic_agent(
     *,
     client: "Anthropic",
-    argus: ArgusClient,
+    klent: KlentClient,
     agent_id: str,
     model: str,
     messages: list[dict[str, Any]],
-    tools: list[ArgusTool],
+    tools: list[KlentTool],
     max_turns: int = 8,
     max_tokens: int = 1024,
     system: str | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> RunAnthropicAgentResult:
-    """Run a full Anthropic tool-use loop with Argus evaluating every call.
+    """Run a full Anthropic tool-use loop with Klent evaluating every call.
 
     Starts an execution, ciclea ``messages.create`` and the tool-use round-trip
     until the model stops asking for tools (or ``max_turns`` is hit), and
     records every decision and outcome on the execution timeline.
     """
-    execution = argus.start_execution(
+    execution = klent.start_execution(
         {
             "agent_id": agent_id,
             "metadata": {**(metadata or {}), "model": model, "tool_count": len(tools)},
@@ -93,7 +93,7 @@ def run_anthropic_agent(
             block.text for block in response.content if getattr(block, "type", None) == "text"
         )
 
-        argus.log_event(
+        klent.log_event(
             {
                 "execution_id": execution["id"],
                 "type": "decision",
@@ -132,7 +132,7 @@ def run_anthropic_agent(
                 continue
 
             result = run_tool(
-                argus,
+                klent,
                 execution_id=execution["id"],
                 tool=block.name,
                 input=dict(block.input or {}),
@@ -146,7 +146,7 @@ def run_anthropic_agent(
                         "type": "tool_result",
                         "tool_use_id": block.id,
                         "is_error": True,
-                        "content": f"Blocked by Argus policy: {result['reason']}",
+                        "content": f"Blocked by Klent policy: {result['reason']}",
                     }
                 )
             elif result["status"] == "pending":
@@ -188,7 +188,7 @@ def run_anthropic_agent(
 
         working_messages.append({"role": "user", "content": tool_results})
 
-    argus.flush()
+    klent.flush()
 
     return RunAnthropicAgentResult(
         execution_id=execution["id"],

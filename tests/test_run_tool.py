@@ -1,10 +1,10 @@
-"""Tests for run_tool. Uses a fake ArgusClient that records interactions."""
+"""Tests for run_tool. Uses a fake KlentClient that records interactions."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from argus_sdk.run_tool import run_tool
+from klent_sdk.run_tool import run_tool
 
 
 def _decision(**overrides: Any) -> dict[str, Any]:
@@ -22,7 +22,7 @@ def _decision(**overrides: Any) -> dict[str, Any]:
 
 
 class FakeVelor:
-    """Stands in for ArgusClient. Records all calls, returns a scripted decision."""
+    """Stands in for KlentClient. Records all calls, returns a scripted decision."""
 
     def __init__(
         self,
@@ -53,7 +53,7 @@ class FakeVelor:
 
 
 def test_allow_executes_and_logs_action_executed():
-    argus = FakeVelor(_decision())
+    klent = FakeVelor(_decision())
     called_with = {}
 
     def execute(inp):
@@ -61,7 +61,7 @@ def test_allow_executes_and_logs_action_executed():
         return "ok"
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="send_email",
         input={"to": "a@b.com"},
@@ -72,12 +72,12 @@ def test_allow_executes_and_logs_action_executed():
     assert result["output"] == "ok"
     assert called_with == {"to": "a@b.com"}
 
-    types = [e["type"] for e in argus.events]
+    types = [e["type"] for e in klent.events]
     assert types == ["action_requested", "action_executed"]
 
 
 def test_deny_short_circuits_and_does_not_execute():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="deny",
             matched_policy_id="pol_1",
@@ -92,7 +92,7 @@ def test_deny_short_circuits_and_does_not_execute():
         return "should not run"
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="transfer_funds",
         input={"amount": 50000},
@@ -104,12 +104,12 @@ def test_deny_short_circuits_and_does_not_execute():
     assert result["reason"] == "Matched high-risk policy"
     assert called is False
 
-    types = [e["type"] for e in argus.events]
+    types = [e["type"] for e in klent.events]
     assert types == ["action_requested"]
 
 
 def test_modify_applies_modifications_before_execute():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="modify",
             matched_policy_id="pol_m",
@@ -128,7 +128,7 @@ def test_modify_applies_modifications_before_execute():
         return "sent"
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="send_email",
         input={"to": "a@b.com", "headers": {}},
@@ -142,7 +142,7 @@ def test_modify_applies_modifications_before_execute():
 
 
 def test_modify_does_not_mutate_caller_input():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="modify",
             matched_policy_id="pol_m",
@@ -152,7 +152,7 @@ def test_modify_does_not_mutate_caller_input():
     caller_input = {"to": "a@b.com"}
 
     run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="send_email",
         input=caller_input,
@@ -163,13 +163,13 @@ def test_modify_does_not_mutate_caller_input():
 
 
 def test_error_is_captured_and_logged():
-    argus = FakeVelor(_decision())
+    klent = FakeVelor(_decision())
 
     def execute(_inp):
         raise RuntimeError("boom")
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="flaky_tool",
         input={},
@@ -180,15 +180,15 @@ def test_error_is_captured_and_logged():
     assert isinstance(result["error"], RuntimeError)
     assert str(result["error"]) == "boom"
 
-    types = [e["type"] for e in argus.events]
+    types = [e["type"] for e in klent.events]
     assert types == ["action_requested", "error"]
 
 
 def test_metadata_is_forwarded_to_every_event():
-    argus = FakeVelor(_decision())
+    klent = FakeVelor(_decision())
 
     run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="x",
         input={},
@@ -196,9 +196,9 @@ def test_metadata_is_forwarded_to_every_event():
         metadata={"tenant": "acme"},
     )
 
-    for evt in argus.events:
+    for evt in klent.events:
         assert evt["metadata"] == {"tenant": "acme"}
-    for evaluation in argus.evaluations:
+    for evaluation in klent.evaluations:
         assert evaluation["metadata"] == {"tenant": "acme"}
 
 
@@ -206,7 +206,7 @@ def test_metadata_is_forwarded_to_every_event():
 
 
 def test_steer_runs_executeSteered_with_redirect_target():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="steer",
             matched_policy_id="pol_steer",
@@ -226,7 +226,7 @@ def test_steer_runs_executeSteered_with_redirect_target():
         return "sent_via_audit"
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="send_email",
         input={"to": "a@b.com"},
@@ -243,7 +243,7 @@ def test_steer_runs_executeSteered_with_redirect_target():
 
 
 def test_steer_falls_back_to_execute_with_steered_input():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="steer",
             matched_policy_id="pol_steer",
@@ -258,7 +258,7 @@ def test_steer_falls_back_to_execute_with_steered_input():
         return "ok"
 
     run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="orig",
         input={"x": 1},
@@ -269,9 +269,9 @@ def test_steer_falls_back_to_execute_with_steered_input():
 
 
 def test_steer_without_redirect_is_an_error():
-    argus = FakeVelor(_decision(decision="steer", redirect_to=None))
+    klent = FakeVelor(_decision(decision="steer", redirect_to=None))
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="x",
         input={},
@@ -307,7 +307,7 @@ def _pending_row(**overrides: Any) -> dict[str, Any]:
 
 
 def test_approve_returns_pending_when_no_wait_is_provided():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -324,7 +324,7 @@ def test_approve_returns_pending_when_no_wait_is_provided():
         return "should not run"
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="transfer_funds",
         input={"amount": 9000},
@@ -338,7 +338,7 @@ def test_approve_returns_pending_when_no_wait_is_provided():
 
 
 def test_approve_with_wait_runs_tool_when_approved():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -348,7 +348,7 @@ def test_approve_with_wait_runs_tool_when_approved():
     )
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="transfer_funds",
         input={"amount": 9000},
@@ -361,7 +361,7 @@ def test_approve_with_wait_runs_tool_when_approved():
 
 
 def test_approve_with_wait_applies_resolver_modifications():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -382,7 +382,7 @@ def test_approve_with_wait_applies_resolver_modifications():
         return "ok"
 
     run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="transfer_funds",
         input={"amount": 9000, "to": "acct_a"},
@@ -393,7 +393,7 @@ def test_approve_with_wait_applies_resolver_modifications():
 
 
 def test_approve_with_wait_returns_denied_when_rejected():
-    argus = FakeVelor(
+    klent = FakeVelor(
         _decision(
             decision="approve",
             matched_policy_id="pol_hitl",
@@ -403,7 +403,7 @@ def test_approve_with_wait_returns_denied_when_rejected():
     )
 
     result = run_tool(
-        argus,  # type: ignore[arg-type]
+        klent,  # type: ignore[arg-type]
         execution_id="exec_1",
         tool="transfer_funds",
         input={},

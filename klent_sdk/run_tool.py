@@ -1,4 +1,4 @@
-"""Generic helper that wraps one tool invocation with the full Argus decision loop."""
+"""Generic helper that wraps one tool invocation with the full Klent decision loop."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from typing import Any, TypedDict
 
-from argus_sdk.client import ArgusClient
+from klent_sdk.client import KlentClient
 
 
 class AllowedResult(TypedDict):
@@ -42,7 +42,7 @@ class ApprovalWait(TypedDict, total=False):
 
 
 def run_tool(
-    client: ArgusClient,
+    client: KlentClient,
     *,
     execution_id: str,
     tool: str,
@@ -52,7 +52,7 @@ def run_tool(
     metadata: dict[str, Any] | None = None,
     approval_wait: ApprovalWait | None = None,
 ) -> dict[str, Any]:
-    """Run one tool call through Argus.
+    """Run one tool call through Klent.
 
     Performs, in order::
 
@@ -108,7 +108,7 @@ def run_tool(
         if not redirect:
             return {
                 "status": "error",
-                "error": RuntimeError("Argus returned steer decision without redirect_to"),
+                "error": RuntimeError("Klent returned steer decision without redirect_to"),
             }
         invoke: Callable[[], Any] = (
             (lambda: execute_steered(redirect["tool"], redirect["input"]))  # type: ignore[misc]
@@ -129,7 +129,7 @@ def run_tool(
         if not pending_id:
             return {
                 "status": "error",
-                "error": RuntimeError("Argus returned approve decision without pending_action_id"),
+                "error": RuntimeError("Klent returned approve decision without pending_action_id"),
             }
         if approval_wait is None:
             return {
@@ -180,7 +180,7 @@ def run_tool(
 
 
 def _run_execution(
-    client: ArgusClient,
+    client: KlentClient,
     *,
     execution_id: str,
     tool: str,
@@ -218,7 +218,7 @@ def _run_execution(
 
 
 def _wait_for_approval(
-    client: ArgusClient,
+    client: KlentClient,
     pending_id: str,
     cfg: ApprovalWait,
 ) -> dict[str, Any]:

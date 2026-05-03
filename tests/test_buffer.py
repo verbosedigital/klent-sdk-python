@@ -1,7 +1,7 @@
 import threading
 import time
 
-from argus_sdk.buffer import EventBuffer
+from klent_sdk.buffer import EventBuffer
 
 
 def test_flushes_when_batch_size_hit():
