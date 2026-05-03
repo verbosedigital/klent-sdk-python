@@ -1,4 +1,4 @@
-"""Argus Python SDK client."""
+"""Klent Python SDK client."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from typing import Any, cast
 
 import httpx
 
-from argus_sdk.buffer import EventBuffer
-from argus_sdk.types import (
+from klent_sdk.buffer import EventBuffer
+from klent_sdk.types import (
     CreateExecutionRequest,
     EvaluateActionRequest,
     EvaluateActionResponse,
@@ -19,11 +19,11 @@ from argus_sdk.types import (
     PendingAction,
 )
 
-DEFAULT_BASE_URL = "https://api.argus.dev/v1"
+DEFAULT_BASE_URL = "https://api.klent.dev/v1"
 
 
-class ArgusClient:
-    """Synchronous Argus client.
+class KlentClient:
+    """Synchronous Klent client.
 
     The ``evaluate_action`` and ``start_execution`` methods are blocking.
     ``log_event`` is non-blocking — events are buffered and flushed in the
@@ -42,7 +42,7 @@ class ArgusClient:
         http_client: httpx.Client | None = None,
     ) -> None:
         if not api_key:
-            raise ValueError("ArgusClient: api_key is required")
+            raise ValueError("KlentClient: api_key is required")
 
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
@@ -107,7 +107,7 @@ class ArgusClient:
             if self._owned_client:
                 self._http.close()
 
-    def __enter__(self) -> ArgusClient:
+    def __enter__(self) -> KlentClient:
         return self
 
     def __exit__(self, *_exc: object) -> None:
@@ -170,7 +170,7 @@ class ArgusClient:
 
 class _HttpError(RuntimeError):
     def __init__(self, method: str, path: str, status: int, body: str) -> None:
-        super().__init__(f"Argus {method} {path} failed: {status} {body}")
+        super().__init__(f"Klent {method} {path} failed: {status} {body}")
         self.status = status
 
 

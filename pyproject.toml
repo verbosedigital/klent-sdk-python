@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "argus-sdk"
+name = "klent-sdk"
 version = "0.0.1"
-description = "Argus SDK for Python — control layer for AI agents"
-readme = { content-type = "text/markdown", text = "See https://argus.dev for docs." }
+description = "Klent SDK for Python — control layer for AI agents"
+readme = { content-type = "text/markdown", text = "See https://klent.dev for docs." }
 requires-python = ">=3.10"
 license = { text = "UNLICENSED" }
 dependencies = [
@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["argus_sdk"]
+packages = ["klent_sdk"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

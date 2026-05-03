@@ -1,8 +1,8 @@
-"""Argus Python SDK."""
+"""Klent Python SDK."""
 
-from argus_sdk.client import ArgusClient
-from argus_sdk.run_tool import run_tool
-from argus_sdk.types import (
+from klent_sdk.client import KlentClient
+from klent_sdk.run_tool import run_tool
+from klent_sdk.types import (
     CreateExecutionRequest,
     EvaluateActionRequest,
     EvaluateActionResponse,
@@ -14,7 +14,7 @@ from argus_sdk.types import (
 )
 
 __all__ = [
-    "ArgusClient",
+    "KlentClient",
     "run_tool",
     "CreateExecutionRequest",
     "EvaluateActionRequest",

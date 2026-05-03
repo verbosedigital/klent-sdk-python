@@ -2,14 +2,14 @@ import httpx
 import pytest
 import respx
 
-from argus_sdk import ArgusClient
+from klent_sdk import KlentClient
 
 
 BASE_URL = "http://api.test.local/v1"
 
 
 def make_client(**kwargs):
-    return ArgusClient(
+    return KlentClient(
         api_key="ak_test_abc",
         base_url=BASE_URL,
         max_retries=0,
@@ -117,7 +117,7 @@ def test_retries_on_5xx():
 
     respx.post(f"{BASE_URL}/executions").mock(side_effect=handler)
 
-    client = ArgusClient(
+    client = KlentClient(
         api_key="k",
         base_url=BASE_URL,
         max_retries=3,
@@ -130,4 +130,4 @@ def test_retries_on_5xx():
 
 def test_requires_api_key():
     with pytest.raises(ValueError):
-        ArgusClient(api_key="")
+        KlentClient(api_key="")
