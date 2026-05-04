@@ -296,6 +296,8 @@ def _pending_row(**overrides: Any) -> dict[str, Any]:
         "matched_policy_id": "pol_hitl",
         "reason": None,
         "modifications": None,
+        "required_approvals": 1,
+        "approvals": [],
         "requested_at": "2026-01-01T00:00:00Z",
         "expires_at": None,
         "resolved_at": None,

@@ -11,6 +11,7 @@ EventType = Literal[
     "action_blocked",
     "action_steered",
     "pending_approval",
+    "approval_vote",
     "approval_resolved",
     "error",
 ]
@@ -90,6 +91,19 @@ class EvaluateActionResponse(TypedDict):
     reason: str | None
 
 
+class PendingActionApproval(TypedDict):
+    """One human's vote on a pending action.
+
+    Multi-step approval policies (`required_approvals > 1`) accumulate these
+    until quorum or a single rejection.
+    """
+
+    user_id: str
+    decision: Literal["approve", "reject"]
+    note: str | None
+    created_at: str
+
+
 class PendingAction(TypedDict):
     """An action parked waiting for human approval."""
 
@@ -104,6 +118,8 @@ class PendingAction(TypedDict):
     matched_policy_id: str | None
     reason: str | None
     modifications: list[PolicyModification] | None
+    required_approvals: int
+    approvals: list[PendingActionApproval]
     requested_at: str
     expires_at: str | None
     resolved_at: str | None
