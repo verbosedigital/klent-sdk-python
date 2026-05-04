@@ -41,6 +41,9 @@ class LogEventRequest(TypedDict, total=False):
     payload: dict[str, Any]
     metadata: NotRequired[dict[str, Any]]
     duration_ms: NotRequired[int]
+    model: NotRequired[str]
+    input_tokens: NotRequired[int]
+    output_tokens: NotRequired[int]
     occurred_at: NotRequired[str]
 
 
@@ -51,6 +54,10 @@ class Event(TypedDict):
     type: EventType
     payload: dict[str, Any]
     metadata: dict[str, Any]
+    duration_ms: int | None
+    model: str | None
+    input_tokens: int | None
+    output_tokens: int | None
     occurred_at: str
     received_at: str
 

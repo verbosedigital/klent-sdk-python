@@ -93,19 +93,27 @@ def run_anthropic_agent(
             block.text for block in response.content if getattr(block, "type", None) == "text"
         )
 
-        klent.log_event(
-            {
-                "execution_id": execution["id"],
-                "type": "decision",
-                "payload": {
-                    "turn": turn,
-                    "stop_reason": stop_reason,
-                    "text": text or None,
-                },
-                "duration_ms": llm_duration_ms,
-                "metadata": metadata or {},
-            }
-        )
+        usage = getattr(response, "usage", None)
+        event: dict[str, Any] = {
+            "execution_id": execution["id"],
+            "type": "decision",
+            "payload": {
+                "turn": turn,
+                "stop_reason": stop_reason,
+                "text": text or None,
+            },
+            "duration_ms": llm_duration_ms,
+            "model": model,
+            "metadata": metadata or {},
+        }
+        if usage is not None:
+            input_tokens = getattr(usage, "input_tokens", None)
+            output_tokens = getattr(usage, "output_tokens", None)
+            if input_tokens is not None:
+                event["input_tokens"] = input_tokens
+            if output_tokens is not None:
+                event["output_tokens"] = output_tokens
+        klent.log_event(event)
 
         if response.stop_reason != "tool_use":
             final_text = text
