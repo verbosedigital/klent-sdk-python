@@ -1,0 +1,30 @@
+# build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# venv
+.venv/
+venv/
+env/
+
+# pytest / mypy / ruff
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# env
+.env
+.env.local
