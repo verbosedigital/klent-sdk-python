@@ -6,13 +6,32 @@ build-backend = "hatchling.build"
 name = "klent-sdk"
 version = "0.0.1"
 description = "Klent SDK for Python — control layer for AI agents"
-readme = { content-type = "text/markdown", text = "See https://klent.dev for docs." }
+readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
+authors = [{ name = "Klent" }]
+keywords = ["klent", "ai", "agents", "tools", "observability", "guardrails", "policy", "mcp"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
   "httpx>=0.27,<1.0",
   "typing-extensions>=4.0",
 ]
+
+[project.urls]
+Homepage = "https://klent.dev"
+Documentation = "https://klent.dev/docs"
+Repository = "https://github.com/verbosedigital/klent-sdk-python"
+Issues = "https://github.com/verbosedigital/klent-sdk-python/issues"
 
 [project.optional-dependencies]
 anthropic = [
