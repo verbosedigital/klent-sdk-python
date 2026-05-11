@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, TypedDict
+
+# `NotRequired` only landed in `typing` in Python 3.11. We target 3.10+ so we
+# pull it from `typing_extensions`, which back-ports it (and other PEP 655
+# helpers) for older interpreters. The package is a tiny pure-Python dep,
+# and httpx / anthropic already drag it in transitively for most users.
+from typing_extensions import NotRequired
 
 EventType = Literal[
     "decision",
