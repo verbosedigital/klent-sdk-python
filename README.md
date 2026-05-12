@@ -70,7 +70,7 @@ See `klent_sdk/anthropic.py` for the full surface.
 ## Develop
 
 ```bash
-git clone https://github.com/verbosedigital/klent-sdk-python.git
+git clone https://github.com/klentlabs/klent-sdk-python.git
 cd klent-sdk-python
 python -m venv .venv && source .venv/bin/activate
 pip install -e '.[dev]'
@@ -86,7 +86,7 @@ Tag `sdk-py-vX.Y.Z` → `.github/workflows/publish-sdk-python.yml` builds wheel 
 - Product, docs, dashboard: [klent.dev](https://klent.dev)
 - Issues for this SDK: this repo
 - Issues for the API, dashboard, or product: <hello@klent.dev>
-- TypeScript SDK, MCP server, starter policies, examples: [verbosedigital/klent-sdk-ts](https://github.com/verbosedigital/klent-sdk-ts)
+- TypeScript SDK, MCP server, starter policies, examples: [klentlabs/klent-sdk-ts](https://github.com/klentlabs/klent-sdk-ts)
 
 ## License
 

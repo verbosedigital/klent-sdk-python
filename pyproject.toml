@@ -30,8 +30,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://klent.dev"
 Documentation = "https://klent.dev/docs"
-Repository = "https://github.com/verbosedigital/klent-sdk-python"
-Issues = "https://github.com/verbosedigital/klent-sdk-python/issues"
+Repository = "https://github.com/klentlabs/klent-sdk-python"
+Issues = "https://github.com/klentlabs/klent-sdk-python/issues"
 
 [project.optional-dependencies]
 anthropic = [
